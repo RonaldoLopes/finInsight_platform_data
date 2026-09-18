@@ -1,44 +1,44 @@
 # FinInsight Platform
 
-Plataforma de dados de mercado financeiro em Azure + Databricks — Medallion Architecture (Bronze/Silver/Gold), AI/ML e GenAI, provisionada 100% via Terraform.
+Financial market data platform on Azure + Databricks — Medallion Architecture (Bronze/Silver/Gold), AI/ML and GenAI, provisioned 100% via Terraform.
 
-> Projeto de estudo para a certificação **Databricks Certified Data Engineer Associate**, com foco em engenharia de dados real aplicada ao mercado financeiro.
+> Study project for the **Databricks Certified Data Engineer Associate** certification, focused on real-world data engineering applied to financial markets.
 
-## Sumário
+## Table of Contents
 
-- [Visão geral](#visão-geral)
-- [Arquitetura](#arquitetura)
-- [Estrutura do repositório](#estrutura-do-repositório)
-- [Pré-requisitos](#pré-requisitos)
-- [Como subir a infraestrutura (Terraform)](#como-subir-a-infraestrutura-terraform)
-- [Confirmação no Portal Azure](#confirmação-no-portal-azure)
-- [Pipelines de dados](#pipelines-de-dados)
-- [Catálogo de tabelas](#catálogo-de-tabelas)
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Repository structure](#repository-structure)
+- [Prerequisites](#prerequisites)
+- [Provisioning the infrastructure (Terraform)](#provisioning-the-infrastructure-terraform)
+- [Verifying in the Azure Portal](#verifying-in-the-azure-portal)
+- [Data pipelines](#data-pipelines)
+- [Table catalog](#table-catalog)
 - [AI/ML](#aiml)
 - [GenAI](#genai)
 - [CI/CD](#cicd)
-- [Ambientes](#ambientes)
-- [Documentação completa](#documentação-completa)
+- [Environments](#environments)
+- [Full documentation](#full-documentation)
 
-## Visão geral
+## Overview
 
-A FinInsight Capital (empresa fictícia) consolida dados públicos e gratuitos de mercado financeiro
-(BCB, B3, Yahoo Finance, Alpha Vantage, FRED, CoinGecko e notícias) em um Lakehouse Databricks,
-calcula KPIs de risco/retorno (VaR, Sharpe, volatilidade, drawdown), treina modelos preditivos e
-gera insights automáticos em linguagem natural via GenAI.
+FinInsight Capital (a fictional company) consolidates free, public financial market data
+(BCB, B3, Yahoo Finance, Alpha Vantage, FRED, CoinGecko and news) into a Databricks Lakehouse,
+computes risk/return KPIs (VaR, Sharpe, volatility, drawdown), trains predictive models, and
+generates automated natural-language insights via GenAI.
 
-## Arquitetura
+## Architecture
 
 ```
-Fontes → Landing (ADLS Gen2) → Bronze (Auto Loader/DLT) → Silver (cálculos financeiros)
-       → Gold (star schema + KPIs) → AI/ML (MLflow) + GenAI (RAG/ai_query) → Power BI / Databricks SQL
+Sources → Landing (ADLS Gen2) → Bronze (Auto Loader/DLT) → Silver (financial calculations)
+        → Gold (star schema + KPIs) → AI/ML (MLflow) + GenAI (RAG/ai_query) → Power BI / Databricks SQL
 ```
 
-![Arquitetura de referência](docs/diagramas/d_arquitetura.png)
+![Reference architecture](docs/diagramas/d_arquitetura.png)
 
-Detalhes completos, com diagramas, estão na apostila em `docs/Apostila_FinInsight_Databricks_Azure.pdf`.
+Full details, with diagrams, are in the handbook at `docs/Apostila_FinInsight_Databricks_Azure.pdf`.
 
-## Estrutura do repositório
+## Repository structure
 
 ```
 fininsight-platform/
@@ -65,7 +65,7 @@ fininsight-platform/
 │       ├── keyvault/
 │       ├── databricks/             # Workspace + Access Connector
 │       ├── unity-catalog/          # Metastore, Storage Credential, Catalog
-│       └── ai-services/            # Azure OpenAI (opcional)
+│       └── ai-services/            # Azure OpenAI (optional)
 ├── pipelines/                      # Delta Live Tables / Lakeflow Declarative Pipelines
 │   ├── bronze/
 │   │   ├── bz_b3_cotacoes.py
@@ -77,8 +77,8 @@ fininsight-platform/
 │   │   └── bz_noticias_raw.py
 │   ├── silver/
 │   │   ├── sv_precos_ativos.py
-│   │   ├── sv_retornos_volatilidade.py     # cálculos financeiros (SMA, RSI, z-score)
-│   │   ├── sv_precos_com_macro.py          # join multi-fonte
+│   │   ├── sv_retornos_volatilidade.py     # financial calculations (SMA, RSI, z-score)
+│   │   ├── sv_precos_com_macro.py          # multi-source join
 │   │   ├── sv_indicadores_macro.py
 │   │   ├── sv_cambio.py
 │   │   ├── sv_cripto.py
@@ -95,13 +95,13 @@ fininsight-platform/
 │       ├── fato_score_ml.py
 │       ├── fato_insights_genai.py
 │       └── fato_sentiment_noticias.py
-├── notebooks/                       # jobs de coleta e orquestração
+├── notebooks/                       # collection and orchestration jobs
 │   ├── 01_coleta_apis.py
 │   ├── 02_streaming_producer.py
 │   ├── 03_registro_pipeline_dlt.py
 │   ├── 05_batch_scoring.py
 │   └── 06_genai_insights.py
-├── ml/                               # treino e registro de modelos (MLflow)
+├── ml/                               # model training and registration (MLflow)
 │   ├── previsao_series_temporais.py
 │   ├── classificador_risco.py
 │   └── clusterizacao_ativos.py
@@ -114,17 +114,17 @@ fininsight-platform/
     └── test_transformacoes_silver.py
 ```
 
-## Pré-requisitos
+## Prerequisites
 
-- Conta Azure com permissão de Owner/Contributor no(s) Resource Group(s)
+- Azure account with Owner/Contributor permission on the Resource Group(s)
 - Terraform >= 1.7
 - Databricks CLI (`databricks bundle` — Asset Bundles)
-- Python 3.10+ (para os jobs de coleta e notebooks locais de teste)
-- Chaves gratuitas: Alpha Vantage (free tier) e, opcionalmente, NewsAPI
+- Python 3.10+ (for collection jobs and local test notebooks)
+- Free API keys: Alpha Vantage (free tier) and, optionally, NewsAPI
 
-![Estrutura de módulos Terraform](docs/diagramas/d_terraform.png)
+![Terraform module structure](docs/diagramas/d_terraform.png)
 
-## Como subir a infraestrutura (Terraform)
+## Provisioning the infrastructure (Terraform)
 
 ```bash
 cd infra
@@ -134,72 +134,74 @@ terraform plan  -var-file=envs/dev/terraform.tfvars -out=plan.out
 terraform apply plan.out
 ```
 
-Repita trocando `dev` por `hml`/`prod` conforme o ambiente. Nunca aponte dois ambientes para o
-mesmo Storage Account/catálogo.
+Repeat, swapping `dev` for `hml`/`prod` depending on the environment. Never point two
+environments at the same Storage Account/catalog.
 
-## Confirmação no Portal Azure
+## Verifying in the Azure Portal
 
-Após o `apply`, confirme manualmente (checklist resumido — passo a passo completo no Capítulo 10
-da apostila):
+After `apply`, confirm manually (short checklist — full step-by-step in Chapter 13 of the
+handbook):
 
-1. Resource Group → 4 containers (landing/bronze/silver/gold) na Storage Account.
-2. Access Connector → Identity → Object ID copiado.
-3. IAM na Storage Account → `Storage Blob/Queue Data Contributor` atribuídos.
-4. IAM no Resource Group → `EventGrid EventSubscription Contributor` e `Storage Account Contributor`.
-5. Databricks Catalog Explorer → External Location → **Test connection** (tudo verde).
-6. Catalog Explorer → catálogo `fininsight_dev` com schemas bronze/silver/gold.
+1. Resource Group → 4 containers (landing/bronze/silver/gold) in the Storage Account.
+2. Access Connector → Identity → copy the Object ID.
+3. IAM on the Storage Account → `Storage Blob/Queue Data Contributor` assigned.
+4. IAM on the Resource Group → `EventGrid EventSubscription Contributor` and `Storage Account Contributor`.
+5. Databricks Catalog Explorer → External Location → **Test connection** (all green).
+6. Catalog Explorer → `fininsight_dev` catalog with the bronze/silver/gold schemas.
 
-## Pipelines de dados
+(full step-by-step in Chapter 13 of the handbook)
 
-Deploy do pipeline DLT via Asset Bundle:
+## Data pipelines
+
+Deploy the DLT pipeline via Asset Bundle:
 
 ```bash
 databricks bundle deploy -t dev
 databricks bundle run fininsight_pipeline_diario -t dev
 ```
 
-A camada Silver realiza **cálculos financeiros completos** (não apenas limpeza): retorno
-logarítmico, médias móveis (SMA 21d/63d), volatilidade anualizada, RSI 14 dias, z-score de preço e
-joins multi-fonte (preço + câmbio + indicador macro). Ver Capítulo 18 da apostila para o código
-completo.
+The Silver layer performs **full financial calculations** (not just cleaning): logarithmic
+return, moving averages (SMA 21d/63d), annualized volatility, 14-day RSI, price z-score, and
+multi-source joins (price + FX + macro indicator). See Chapter 25 of the handbook for the
+full step-by-step and code.
 
-![Pipeline medallion detalhado](docs/diagramas/d_medallion.png)
+![Detailed medallion pipeline](docs/diagramas/d_medallion.png)
 
-## Catálogo de tabelas
+## Table catalog
 
-23 tabelas no total: 7 Bronze, 6 Silver, 10 Gold (3 dimensões + 7 fatos). Lista completa e modelo
-dimensional (star schema) no Capítulo 23-24 da apostila.
+23 tables in total: 7 Bronze, 6 Silver, 10 Gold (3 dimensions + 7 facts). Full list and
+dimensional model (star schema) in Chapter 30-31 of the handbook.
 
-![Modelo dimensional Gold](docs/diagramas/d_starschema.png)
+![Gold dimensional model](docs/diagramas/d_starschema.png)
 
 ## AI/ML
 
-- Feature Store com features derivadas da Silver/Gold (retorno, volatilidade, RSI, z-score)
-- Modelos: previsão de câmbio (Prophet), classificação de risco (Gradient Boosting), clusterização
-  de ativos (KMeans)
-- Tracking, Registry e Serving via MLflow
+- Feature Store with features derived from Silver/Gold (return, volatility, RSI, z-score)
+- Models: FX forecasting (Prophet), risk classification (Gradient Boosting), asset
+  clustering (KMeans)
+- Tracking, Registry and Serving via MLflow
 
 ## GenAI
 
-- Insights diários automáticos via `ai_query` (Databricks Foundation Model API) ou Azure OpenAI
-- RAG sobre notícias financeiras com Databricks Vector Search
-- Sumarização e sentiment de notícias via `ai_summarize` / `ai_classify`
+- Daily automated insights via `ai_query` (Databricks Foundation Model API) or Azure OpenAI
+- RAG over financial news with Databricks Vector Search
+- News summarization and sentiment via `ai_summarize` / `ai_classify`
 
 ## CI/CD
 
-Deploy automatizado por branch via Bitbucket Pipelines + Databricks Asset Bundles:
-`develop` → DEV, `release/*` → HML, `main` → PROD (com PR obrigatório para `main`).
+Automated per-branch deployment via Bitbucket Pipelines + Databricks Asset Bundles:
+`develop` → DEV, `release/*` → HML, `main` → PROD (with mandatory PR review for `main`).
 
-## Ambientes
+## Environments
 
-| Ambiente | Catálogo Unity Catalog | Uso |
+| Environment | Unity Catalog catalog | Purpose |
 |---|---|---|
-| DEV | `fininsight_dev` | Desenvolvimento e testes |
-| HML | `fininsight_hml` | Homologação / validação de negócio |
-| PROD | `fininsight_prod` | Produção |
+| DEV | `fininsight_dev` | Development and testing |
+| HML | `fininsight_hml` | Staging / business validation |
+| PROD | `fininsight_prod` | Production |
 
-## Documentação completa
+## Full documentation
 
-O passo a passo detalhado (infraestrutura, pipelines, modelagem, AI/ML, GenAI, governança e
-troubleshooting) está em **`docs/Apostila_FinInsight_Databricks_Azure.pdf`**, com índice
-clicável e marcadores por capítulo.
+The detailed step-by-step (infrastructure, pipelines, modeling, AI/ML, GenAI, governance and
+troubleshooting) is in **`docs/Apostila_FinInsight_Databricks_Azure.pdf`**, with a clickable
+table of contents and bookmarks per chapter.
