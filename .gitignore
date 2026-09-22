@@ -218,11 +218,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Terraform
-infra/
 *.tfstate
 *.tfstate.*
-*.tfvars
-*.tfvars.json
 .terraform/
 .terraform.lock.hcl
 crash.log
@@ -231,3 +228,4 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+plan.out
