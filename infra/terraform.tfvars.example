@@ -1,0 +1,19 @@
+# Exemplo de variáveis necessárias para inicializar o Terraform
+# Copie este arquivo para terraform.tfvars e preencha os valores reais
+# NÃO commitar terraform.tfvars com valores sensíveis!
+
+# Azure Subscription ID (encontrar com: az account show --query id)
+subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Databricks Personal Access Token
+# Gerar em: https://<workspace-url>/settings/tokens
+databricks_token = "dapi1234567890abcdef"
+
+# Environment vars (já definidas em envs/*/terraform.tfvars)
+# environment = "dev"
+# location    = "eastus2"
+
+# Backend config (passar via CLI se preferir não hardcodar)
+# terraform init -backend-config="subscription_id=xxx"
+# Ou definir a variável de ambiente:
+# export ARM_SUBSCRIPTION_ID=seu-subscription-id
